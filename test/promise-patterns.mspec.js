@@ -2,7 +2,7 @@
 /* globals describe: true, it: true, chai: true, sinon: true */
 describe('Promise Patterns', function () {
 	var expect = chai.expect;
-	
+
 	function createPassThruStub() {
 		var stub = sinon.stub();
 		stub.returnsArg(0);
@@ -168,4 +168,33 @@ describe('Promise Patterns', function () {
 			});
 		});
 	});
+
+	describe('nested promises', function () {
+
+		var promise, nestedPromise, nestedPromiseError, catch1;
+
+		beforeEach(function (done) {
+
+			nestedPromiseError = new Error('rejected');
+
+			promise = new Promise(function (res, rej) { res('resolved'); });
+
+			nestedPromise = new Promise(function (res, rej) {
+				rej(nestedPromiseError);
+			});
+
+			catch1 = createPassThruStub();
+
+			promise.then(function() {
+				return nestedPromise;
+			}).catch(catch1).then(function() { done(); });
+
+		});
+
+		it('should have called catch1 with nestedPromise\'s rejection', function () {
+			expect(catch1.getCall(0).args[0]).to.equal(nestedPromiseError);
+		});
+
+	});
+
 });
